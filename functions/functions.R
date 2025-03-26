@@ -12,7 +12,6 @@ library(ggsignif)
 library(tidyverse)
 library(MASS)
 
-
 get_multi_genes <- function(X, pl, genes, combine) {
   s <- lapply(genes, function(x) {
     get_gene(X, pl, x, combine)
