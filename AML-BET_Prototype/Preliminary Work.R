@@ -1,7 +1,8 @@
 library(ggplot2)
 library(dplyr)
 library(shiny)
-setwd("C:/Users/nateg/OneDrive/Desktop/R Files/AML-BET Proposal")
+library(shinylive)
+setwd("C:/Users/nateg/Downloads/GitHub/AML-BET/AML-BET_Prototype")
 
 beat <- readRDS('BEAT_BMA.rds')
 

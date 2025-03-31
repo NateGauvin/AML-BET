@@ -7,13 +7,29 @@ library(ggsignif)
 library(tidyverse)
 library(MASS)
 library(mongolite)
+library(argparse)
+
+expression_upload <- function(dataset, db) {
+  if      (grepl("GSE", dataset)) {upload_GSE_expr_data(dataset, upload = db)}
+  else if (dataset == "target") {upload_GSE_expr_data(dataset, GPL_dataset = "ensemble", target = TRUE, upload = db)}
+  else if (grepl("BEAT", dataset)) {upload_BEAT_expr_data(dataset, upload = db)}
+  else if (grepl("TCGA", dataset)) {upload_TCGA_expr_data(upload = db)}
+  else {stop(paste0("unable to process dataset: ", dataset))}
+}
+
+
 
 # GPL96 is only for GSE37642_2
 # GPL10558 is only for GSE71014
 # ensemble is only for target
 
-upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset, target = FALSE) {
+upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset = "auto", target = FALSE, upload = TRUE) {
   GSE <- readRDS(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/", GSE_dataset, ".rds"))
+  if (GPL_dataset == "auto" && target == FALSE) {
+    if (GSE_dataset == "GSE37642_2") {GPL_dataset <- "GPL96"}
+    if (GSE_dataset == "GSE71014") {GPL_dataset <- "GPL10558"}
+    else {GPL_dataset <- "GPL570"}
+  }
   if (target == FALSE) {
     GPL <- load(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/RData/", GPL_dataset,".RData"))
     if (length(GPL) > 1) {stop("GPL data provided containts more than one object.")}
@@ -31,7 +47,7 @@ upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset, target = FALSE) {
   expression_data <- t(sapply(all_genes, return_expr_GSE, dataset = GSE, GPL = GPL))
   
   # 3. Upload data to MongoDB
-  upload_expr_mongo(GSE_dataset, expression_data)
+  if (upload == TRUE) {upload_expr_mongo(GSE_dataset, expression_data)}
 }
 
 # 3. Helper Function for 3
@@ -48,17 +64,17 @@ return_expr_GSE <- function(gene_name, dataset, GPL) {
   expr_data_to_return <- dataset$X[max_probe, , drop = FALSE]
 }
 
-upload_BEAT_expr_data <- function(dataset_name) {
+upload_BEAT_expr_data <- function(dataset_name, upload = TRUE) {
   BEAT_dataset <- readRDS(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/", dataset_name, ".rds"))
-  upload_expr_mongo(dataset_name, BEAT_dataset$X)
+  if(upload == TRUE) {upload_expr_mongo(dataset_name, BEAT_dataset$X)}
 }
 
-upload_TCGA_expr_data <- function() {
+upload_TCGA_expr_data <- function(upload = TRUE) {
   TCGA <- readRDS("C:/Users/nateg/Downloads/GitHub/AML-BET/data/TCGA.rds")
   TCGA$X <- TCGA$X[-(1:8),]
   genes <- sub("\\|.*", "", rownames(TCGA$X))
   expression_data <- t(sapply(genes, return_expr_TCGA))
-  upload_expr_mongo("TCGA", expression_data)
+  if (upload == TRUE) {upload_expr_mongo("TCGA", expression_data)}
 }
 
 # Helper function for returning TCGA data
@@ -86,12 +102,14 @@ upload_expr_mongo <- function(dataset_name, expression_data) {
   print(paste0("Expression data from ", dataset_name, " successfully uploaded to MongoDB,"))
 }
 
-upload_clinical_data <- function(dataset_name) {
+upload_clinical_data <- function(dataset_name, upload = TRUE) {
   dataset <- readRDS(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/", dataset_name, ".rds"))
   rownames(dataset$Y) <- colnames(dataset$X)
   dataset <- dataset$Y
   factors <- colnames(dataset)
   dataset <- standardize_clinical_data(dataset, factors)
+  
+  if (upload == FALSE) {return()}
   
   connect_mongo <- connect_mongo1()
   connect_mongo()
@@ -140,3 +158,4 @@ connect_mongo1 <- function(url = "mongodb://localhost:27017/") {
 return_data <- function(dataset, variable) {
   
 }
+
