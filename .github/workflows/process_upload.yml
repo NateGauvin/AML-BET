@@ -26,5 +26,5 @@ jobs:
       - name: add repo
         uses: actions/checkout@v3
 
-      - name: process TCGA no upload
-        run: Rscript functions/commandLineParser.R --db no --datasets TCGA
+      - name: process all datasets no upload
+        run: Rscript functions/commandLineParser.R --db no
