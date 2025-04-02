@@ -43,9 +43,9 @@ if (args$datasets != "all") {
 }
 
 if (args$expression == "yes") {
-  lapply(all_datasets, expression_upload, args$db)
+  print(lapply(all_datasets, expression_upload, args$db))
 }
 
 if (args$clinical == "yes") {
-  lapply(all_datasets, upload_clinical_data, args$db)
+  print(lapply(all_datasets, upload_clinical_data, args$db))
 }

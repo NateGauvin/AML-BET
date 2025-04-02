@@ -11,6 +11,7 @@ expression_upload <- function(dataset, db) {
   else if (grepl("BEAT", dataset)) {upload_BEAT_expr_data(dataset, upload = db)}
   else if (grepl("TCGA", dataset)) {upload_TCGA_expr_data(upload = db)}
   else {stop(paste0("unable to process dataset: ", dataset))}
+  return(paste0("Successfully processed/uploaded ", dataset, " expression data."))
 }
 
 
@@ -32,7 +33,7 @@ upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset = "auto", target = FAL
     GPL <- get(GPL)
   }
   else {
-    GPL <- readRDS(paste0("data/", GPL_dataset, ".rds"))
+    GPL <- readRDS(paste0("data/additional_data/", GPL_dataset, ".rds"))
   }
   
   # 1. vector of all possible unique genes
@@ -101,11 +102,14 @@ upload_expr_mongo <- function(dataset_name, expression_data) {
 upload_clinical_data <- function(dataset_name, upload = TRUE) {
   dataset <- readRDS(paste0("data/", dataset_name, ".rds"))
   rownames(dataset$Y) <- colnames(dataset$X)
+  if (grepl("GSE6891", dataset_name)) {dataset <- add_survival_data_GSE6891(dataset)}
   dataset <- dataset$Y
   factors <- colnames(dataset)
   dataset <- standardize_clinical_data(dataset, factors)
   
-  if (upload == FALSE) {return()}
+  if (upload == FALSE) {
+    return(paste0("Successfully processed ", dataset_name, " clinical data."))
+    }
   
   connect_mongo <- connect_mongo1()
   connect_mongo()
@@ -126,6 +130,7 @@ upload_clinical_data <- function(dataset_name, upload = TRUE) {
     json_text <- paste0(json_text, ' }')
     connection$insert(json_text)
   }
+  return(paste0("Successfully uploaded ", dataset_name, " clinical data."))
 }
 
 standardize_clinical_data <- function(dataset, factors) {
@@ -140,6 +145,29 @@ standardize_clinical_data <- function(dataset, factors) {
     dataset$risk[dataset$risk == "NA"] <- NA
     dataset$risk[dataset$risk == "adverse"] <- "poor"
   }
+  return(dataset)
+}
+
+add_survival_data_GSE6891 <- function(dataset) {
+  dataset$Y$time <- NA
+  dataset$Y$death <- NA
+  
+  rownames(dataset$Y)
+  
+  GSE_6891_survival <- readRDS("data/additional_data/GSE_6891_survival.rds")
+  rownames(GSE_6891_survival) <- GSE_6891_survival$volgnummer
+  
+  for (x in 1:length(rownames(dataset$Y))) {
+    title <- dataset$p[rownames(dataset$Y)[x],1]
+    title <- substr(title, 5, nchar(title))
+    dataset$Y[x,3] <- GSE_6891_survival[title, 4]
+    dataset$Y[x,4] <- GSE_6891_survival[title, 3]
+    # Use gsub and match
+  }
+  
+  dataset$Y$death[dataset$Y$death == "alive"] <- 0
+  dataset$Y$death[dataset$Y$death == "dead"] <- 1
+  
   return(dataset)
 }
 
