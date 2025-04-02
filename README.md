@@ -1,5 +1,4 @@
-[![Processing_Data_No_Upload] 
-(https://github.com/NateGauvin/AML-BET/actions/workflows/process_upload.yml/badge.svg)]
+[![process_upload](https://github.com/NateGauvin/AML-BET/actions/workflows/process_upload.yml/badge.svg)](https://github.com/NateGauvin/AML-BET/actions/workflows/process_upload.yml)
 
 # AML-BET (Acute Myeloid Leukemia Biomarker Evaluation Tool)
 
