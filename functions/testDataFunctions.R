@@ -88,15 +88,16 @@ upload_expr_mongo <- function(dataset_name, expression_data) {
   connect_mongo()
   connection <- mongo(paste0(dataset_name, "_expr"))
   
+  expression_data <- data.frame(expression_data)
+  
   for (x in 1:length(rownames(expression_data))) {
-    if (mean(expression_data[x,]) == 0) {next()}
+    if (rowMeans(expression_data[x,]) == 0) {next()}
     expr <- as.vector(expression_data[x,])
     expr <- paste0(expr, collapse = ",")
     
     str <- paste0('{"gene" :"', rownames(expression_data)[x],'", "expr" : [', expr, ']}')
     connection$insert(str)
   }
-  print(paste0("Expression data from ", dataset_name, " successfully uploaded to MongoDB,"))
 }
 
 upload_clinical_data <- function(dataset_name, upload = TRUE) {
