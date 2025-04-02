@@ -172,8 +172,8 @@ add_survival_data_GSE6891 <- function(dataset) {
 }
 
 # Connecting to MongoDB
-connect_mongo1 <- function(url = "mongodb://localhost:27017/") {
-  url2 <- url
+connect_mongo1 <- function(port = 27017) {
+  url2 <- paste0("mongodb://localhost:", port, "/")
   function() {
     m <- mongo(url2)
   }

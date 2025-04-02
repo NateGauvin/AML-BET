@@ -17,6 +17,8 @@ parser$add_argument("--clinical", default = "yes",
                     help = "add clinical data (yes/no)")
 parser$add_argument("--db", default = "no",
                     help = "upload data to database (yes/no)")
+parser$add_argument("--port", default = 27017,
+                    help = "alternative mongodb port")
 
 args <- parser$parse_args()
 
