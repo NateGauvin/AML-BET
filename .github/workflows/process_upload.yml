@@ -2,7 +2,8 @@ name: process_upload
 
 on:
   push:
-    branches: main
+    paths:
+      - functions/*.R
 
 jobs:
   test-process:
