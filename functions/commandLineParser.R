@@ -1,4 +1,9 @@
-source('testDataFunctions.R')
+source('functions/testDataFunctions.R')
+library("argparse")
+
+
+#options(python_cmd = 'C:/Users/nateg/AppData/Local/Microsoft/WindowsApps/python.exe')
+
 
 parser <- ArgumentParser(
   description = paste0("Process data for mongo upload. 
@@ -21,22 +26,26 @@ for (p in c('expression', 'clinical', 'db')) {
   }
 }
 
+if (args$db == "yes") {args$db <- TRUE}
+if (args$db == "no") {args$db <- FALSE}
+
 all_datasets <- NULL
 all_datasets <- Sys.glob('data/*.rds')
 all_datasets <- sub('data/', '', all_datasets)
 all_datasets <- sub('.rds', '', all_datasets)
+
 if (args$datasets != "all") {
   datasets <- strsplit(args$datasets, ',')
   if (any(is.na(match(datasets[[1]], all_datasets)))) {
     stop('invalid datasets entered')
   }
-  all_datasets <- datasets
+  all_datasets <- datasets[[1]]
 }
 
 if (args$expression == "yes") {
-  apply(datasets,, expression_upload, db)
+  lapply(all_datasets, expression_upload, args$db)
 }
 
 if (args$clinical == "yes") {
-  apply(datasets,, upload_clinical_data, db)
+  lapply(all_datasets, upload_clinical_data, args$db)
 }

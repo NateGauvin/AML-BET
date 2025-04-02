@@ -24,19 +24,19 @@ expression_upload <- function(dataset, db) {
 # ensemble is only for target
 
 upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset = "auto", target = FALSE, upload = TRUE) {
-  GSE <- readRDS(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/", GSE_dataset, ".rds"))
+  GSE <- readRDS(paste0("data/", GSE_dataset, ".rds"))
   if (GPL_dataset == "auto" && target == FALSE) {
     if (GSE_dataset == "GSE37642_2") {GPL_dataset <- "GPL96"}
     if (GSE_dataset == "GSE71014") {GPL_dataset <- "GPL10558"}
     else {GPL_dataset <- "GPL570"}
   }
   if (target == FALSE) {
-    GPL <- load(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/RData/", GPL_dataset,".RData"))
+    GPL <- load(paste0("data/RData/", GPL_dataset,".RData"))
     if (length(GPL) > 1) {stop("GPL data provided containts more than one object.")}
     GPL <- get(GPL)
   }
   else {
-    GPL <- readRDS(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/", GPL_dataset, ".rds"))
+    GPL <- readRDS(paste0("data/", GPL_dataset, ".rds"))
   }
   
   # 1. vector of all possible unique genes
@@ -65,20 +65,20 @@ return_expr_GSE <- function(gene_name, dataset, GPL) {
 }
 
 upload_BEAT_expr_data <- function(dataset_name, upload = TRUE) {
-  BEAT_dataset <- readRDS(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/", dataset_name, ".rds"))
+  BEAT_dataset <- readRDS(paste0("data/", dataset_name, ".rds"))
   if(upload == TRUE) {upload_expr_mongo(dataset_name, BEAT_dataset$X)}
 }
 
 upload_TCGA_expr_data <- function(upload = TRUE) {
-  TCGA <- readRDS("C:/Users/nateg/Downloads/GitHub/AML-BET/data/TCGA.rds")
+  TCGA <- readRDS("data/TCGA.rds")
   TCGA$X <- TCGA$X[-(1:8),]
   genes <- sub("\\|.*", "", rownames(TCGA$X))
-  expression_data <- t(sapply(genes, return_expr_TCGA))
+  expression_data <- t(sapply(genes, return_expr_TCGA, TCGA))
   if (upload == TRUE) {upload_expr_mongo("TCGA", expression_data)}
 }
 
 # Helper function for returning TCGA data
-return_expr_TCGA <- function(gene_name) {
+return_expr_TCGA <- function(gene_name, TCGA) {
   all_entries <- grep(paste0(gene_name, "|"), rownames(TCGA$X), fixed = TRUE, value = TRUE)
   mean_expr <- rowMeans(TCGA$X[all_entries, , drop = FALSE])
   max_probe <- all_entries[which.max(mean_expr)]
@@ -103,7 +103,7 @@ upload_expr_mongo <- function(dataset_name, expression_data) {
 }
 
 upload_clinical_data <- function(dataset_name, upload = TRUE) {
-  dataset <- readRDS(paste0("C:/Users/nateg/Downloads/GitHub/AML-BET/data/", dataset_name, ".rds"))
+  dataset <- readRDS(paste0("data/", dataset_name, ".rds"))
   rownames(dataset$Y) <- colnames(dataset$X)
   dataset <- dataset$Y
   factors <- colnames(dataset)
