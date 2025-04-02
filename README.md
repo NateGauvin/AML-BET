@@ -1,3 +1,4 @@
+https://github.com/NateGauvin/AML-BET/actions/workflows/process_upload.yml/badge.svg
 # AML-BET (Acute Myeloid Leukemia Biomarker Evaluation Tool)
 
 Prototype and thesis proposal can be found in AML-BET_Prototype.
