@@ -173,10 +173,10 @@ add_survival_data_GSE6891 <- function(dataset) {
 }
 
 # Connecting to MongoDB
-connect_mongo1 <- function(user = "root", pass = "password", host = "0.0.0.0:27017") {
+connect_mongo1 <- function(user = "admin", pass = "password", host = "localhost:27017") {
   uri <- sprintf("mongodb://%s:%s@%s/", user, pass, host)
   function() {
-    m <- mongo(url = uri, db = "aml-bet")
+    m <- mongo(url = uri, db = "database")
     mongo
   }
 }
