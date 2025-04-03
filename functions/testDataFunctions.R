@@ -40,6 +40,8 @@ upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset = "auto", target = FAL
   all_genes <- unique(unlist(strsplit(GPL[,2], ' /// ')))
   all_genes <- na.omit(all_genes)
   
+  if (!is.data.frame(GSE$X)) {GSE$X <- data.frame(GSE$X)}
+  
   # 2. Calling return_expr_GSE for every entry in all_genes
   expression_data <- t(sapply(all_genes, return_expr_GSE, dataset = GSE, GPL = GPL))
   
@@ -173,6 +175,11 @@ connect_mongo <- function(collection_name, user = "root", pass = "password", hos
   return (mongo(url = uri, db = "aml-bet", collection = collection_name))
   
 }
+
+# Overloaded method for RStudio use
+#connect_mongo <- function(collection_name) {
+#  return(mongo(collection = collection_name))
+#}
 
 return_data <- function(dataset, variable) {
   
