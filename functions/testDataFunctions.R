@@ -1,10 +1,11 @@
+source("functions/mongoConnection.R")
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(MASS)
-library(mongolite)
 library(argparse)
 
+# Pipes datasets to correct function
 expression_upload <- function(dataset, db) {
   if      (grepl("GSE", dataset)) {upload_GSE_expr_data(dataset, upload = db)}
   else if (dataset == "target") {upload_GSE_expr_data(dataset, GPL_dataset = "ensemble", target = TRUE, upload = db)}
@@ -14,12 +15,7 @@ expression_upload <- function(dataset, db) {
   return(paste0("Successfully processed/uploaded ", dataset, " expression data."))
 }
 
-
-
-# GPL96 is only for GSE37642_2
-# GPL10558 is only for GSE71014
-# ensemble is only for target
-
+# Processes and uploads GSE/target data with alternative GPL option
 upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset = "auto", target = FALSE, upload = TRUE) {
   GSE <- readRDS(paste0("data/", GSE_dataset, ".rds"))
   if (GPL_dataset == "auto" && target == FALSE) {
@@ -49,7 +45,7 @@ upload_GSE_expr_data <- function(GSE_dataset, GPL_dataset = "auto", target = FAL
   if (upload == TRUE) {upload_expr_mongo(GSE_dataset, expression_data)}
 }
 
-# 3. Helper Function for 3
+# 3. Helper function for returning GSE/target data
 return_expr_GSE <- function(gene_name, dataset, GPL) {
   all_probes <- GPL[grepl(gene_name, GPL[,2], fixed = TRUE),1]
   probe_validity_check <- match(all_probes, rownames(dataset$X))
@@ -63,11 +59,13 @@ return_expr_GSE <- function(gene_name, dataset, GPL) {
   expr_data_to_return <- dataset$X[max_probe, , drop = FALSE]
 }
 
+# Processes and uploads TCGA data
 upload_BEAT_expr_data <- function(dataset_name, upload = TRUE) {
   BEAT_dataset <- readRDS(paste0("data/", dataset_name, ".rds"))
   if(upload == TRUE) {upload_expr_mongo(dataset_name, BEAT_dataset$X)}
 }
 
+# Processes and uploads TCGA data
 upload_TCGA_expr_data <- function(upload = TRUE) {
   TCGA <- readRDS("data/TCGA.rds")
   TCGA$X <- TCGA$X[-(1:8),]
@@ -131,6 +129,7 @@ upload_clinical_data <- function(dataset_name, upload = TRUE) {
   return(paste0("Successfully uploaded ", dataset_name, " clinical data."))
 }
 
+# Standardizes clinical data for later database queries
 standardize_clinical_data <- function(dataset, factors) {
   if ("risk" %in% factors) {
     dataset$risk[dataset$risk == "intermediate/normal"] <- "intermediate"
@@ -146,6 +145,7 @@ standardize_clinical_data <- function(dataset, factors) {
   return(dataset)
 }
 
+# Helper function to add GSE6891 survival data
 add_survival_data_GSE6891 <- function(dataset) {
   dataset$Y$time <- NA
   dataset$Y$death <- NA
@@ -168,20 +168,3 @@ add_survival_data_GSE6891 <- function(dataset) {
   
   return(dataset)
 }
-
-# Connecting to MongoDB
-connect_mongo <- function(collection_name, user = "root", pass = "password", host = "localhost:27017") {
-  uri <- sprintf("mongodb://%s:%s@%s/", user, pass, host)
-  return (mongo(url = uri, db = "aml-bet", collection = collection_name))
-  
-}
-
-# Overloaded method for RStudio use
-#connect_mongo <- function(collection_name) {
-#  return(mongo(collection = collection_name))
-#}
-
-return_data <- function(dataset, variable) {
-  
-}
-
