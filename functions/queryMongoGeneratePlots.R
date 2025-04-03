@@ -1,3 +1,4 @@
+source("functions/mongoConnection.R")
 library(mongolite)
 library(ggplot2)
 
