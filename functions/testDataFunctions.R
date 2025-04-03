@@ -85,7 +85,7 @@ return_expr_TCGA <- function(gene_name, TCGA) {
 # Helper function for uploading final expression data
 upload_expr_mongo <- function(dataset_name, expression_data) {
   
-  
+  print("not yet connected")
   
   connect_mongo <- connect_mongo1()
   connect_mongo()
@@ -181,10 +181,10 @@ add_survival_data_GSE6891 <- function(dataset) {
 }
 
 # Connecting to MongoDB
-connect_mongo1 <- function(user = "admin", pass = "password", host = "localhost:27017") {
+connect_mongo1 <- function(user = "root", pass = "password", host = "localhost:27017") {
   uri <- sprintf("mongodb://%s:%s@%s/", user, pass, host)
   function() {
-    m <- mongo(url = uri, db = "database", collection = "aml-bet")
+    m <- mongo(url = uri, db = "database")
   }
 }
 
