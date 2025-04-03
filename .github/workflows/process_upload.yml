@@ -16,6 +16,7 @@ jobs:
         env:
           MONGO_INITDB_ROOT_USERNAME: root
           MONGO_INITDB_ROOT_PASSWORD: password
+          MONGO_INITDB_DATABASE: database
         ports:
           - 27017:27017
     
@@ -36,6 +37,23 @@ jobs:
 
       - name: add repo
         uses: actions/checkout@v3
+
+      - name: install mongosh for initialization
+        run: |
+          sudo apt-get install gnupg
+          wget -qO- https://www.mongodb.org/static/pgp/server-7.0.asc | sudo tee /etc/apt/trusted.gpg.d/server-7.0.asc
+          echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+          sudo apt-get update
+          sudo apt-get install -y mongodb-mongosh
+          mongosh --version
+
+      - name: initialize mongodb
+        run: |
+          mongosh --host localhost:27017 -u root -p password --authenticationDatabase admin <<EOF
+            db = db.getSiblingDB('database');
+            db.createUser({ user: 'admin', pwd: 'password', roles: [{ role: 'readWrite', db: 'database' }] })
+            db.createCollection('aml-bet');
+          EOF
 
       - name: process all datasets with upload
         run: Rscript functions/commandLineParser.R --db yes
