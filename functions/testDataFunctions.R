@@ -84,9 +84,17 @@ return_expr_TCGA <- function(gene_name, TCGA) {
 
 # Helper function for uploading final expression data
 upload_expr_mongo <- function(dataset_name, expression_data) {
+  
+  
+  
   connect_mongo <- connect_mongo1()
   connect_mongo()
+  
+  print("connection made")
+  
   connection <- mongo(paste0(dataset_name, "_expr"))
+  
+  print("collection made")
   
   expression_data <- data.frame(expression_data)
   
