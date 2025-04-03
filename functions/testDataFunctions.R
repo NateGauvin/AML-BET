@@ -87,14 +87,9 @@ upload_expr_mongo <- function(dataset_name, expression_data) {
   
   print("not yet connected")
   
-  connect_mongo <- connect_mongo1()
-  connect_mongo()
+  connection <- connect_mongo(collection_name = paste0(dataset_name, "_expr"))
   
-  print("connection made")
-  
-  connection <- mongo(paste0(dataset_name, "_expr"))
-  
-  print("collection made")
+  print("connection/collection made")
   
   expression_data <- data.frame(expression_data)
   
@@ -181,11 +176,10 @@ add_survival_data_GSE6891 <- function(dataset) {
 }
 
 # Connecting to MongoDB
-connect_mongo1 <- function(user = "root", pass = "password", host = "localhost:27017") {
+connect_mongo <- function(collection_name, user = "root", pass = "password", host = "localhost:27017") {
   uri <- sprintf("mongodb://%s:%s@%s/", user, pass, host)
-  function() {
-    m <- mongo(url = uri, db = "database")
-  }
+  return (mongo(url = uri, db = "database", collection = collection_name))
+  
 }
 
 return_data <- function(dataset, variable) {
