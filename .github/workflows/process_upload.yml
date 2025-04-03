@@ -3,8 +3,7 @@ name: process_upload
 on:
   push:
     paths:
-      - functions/*.R
-      - .github/workflows/process_upload.yml
+      - workflow_dispatch
 
 jobs:
   test-process:
