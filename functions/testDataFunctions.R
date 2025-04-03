@@ -90,7 +90,7 @@ upload_expr_mongo <- function(dataset_name, expression_data) {
   expression_data <- data.frame(expression_data)
   
   for (x in 1:length(rownames(expression_data))) {
-    if (rowMeans(expression_data[x,]) == 0) {next()}
+    if (rowMeans(as.numeric(expression_data[x,])) == 0) {next()}
     expr <- as.vector(expression_data[x,])
     expr <- paste0(expr, collapse = ",")
     
