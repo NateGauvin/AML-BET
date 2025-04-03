@@ -47,7 +47,7 @@ jobs:
           mongosh --version
 
       - name: process all datasets with upload
-        run: Rscript functions/commandLineParser.R --db yes
+        run: Rscript functions/processUploadParser.R --db yes
 
       - name: query databases
         run: |
