@@ -16,7 +16,7 @@ jobs:
         env:
           MONGO_INITDB_ROOT_USERNAME: root
           MONGO_INITDB_ROOT_PASSWORD: password
-          MONGO_INITDB_DATABASE: database
+          MONGO_INITDB_DATABASE: aml-bet
         ports:
           - 27017:27017
     
@@ -47,13 +47,15 @@ jobs:
           sudo apt-get install -y mongodb-mongosh
           mongosh --version
 
-      - name: initialize mongodb
-        run: |
-          mongosh --host localhost:27017 -u root -p password --authenticationDatabase admin <<EOF
-            db = db.getSiblingDB('database');
-            db.createUser({ user: 'admin', pwd: 'password', roles: [{ role: 'readWrite', db: 'database' }] })
-            db.createCollection('aml-bet');
-          EOF
-
       - name: process all datasets with upload
         run: Rscript functions/commandLineParser.R --db yes
+
+      - name: query databases
+        run: |
+          mongosh --host localhost:27017 -u root -p password --authenticationDatabase admin <<EOF
+            show dbs
+            use aml-bet
+            show collections
+            db.TCGA_expr.find()
+            db.TCGA_clinical.find()
+          EOF
