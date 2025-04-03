@@ -85,11 +85,7 @@ return_expr_TCGA <- function(gene_name, TCGA) {
 # Helper function for uploading final expression data
 upload_expr_mongo <- function(dataset_name, expression_data) {
   
-  print("not yet connected")
-  
   connection <- connect_mongo(collection_name = paste0(dataset_name, "_expr"))
-  
-  print("connection/collection made")
   
   expression_data <- data.frame(expression_data)
   
@@ -115,9 +111,7 @@ upload_clinical_data <- function(dataset_name, upload = TRUE) {
     return(paste0("Successfully processed ", dataset_name, " clinical data."))
     }
   
-  connect_mongo <- connect_mongo1()
-  connect_mongo()
-  connection <- mongo(paste0(dataset_name, "_clinical"))
+  connection <- connect_mongo(collection_name = paste0(dataset_name, "_clinical"))
   
   for (x in 1:length(rownames(dataset))) {
     json_text <- paste0('{ "id" : "', rownames(dataset)[x], '",')
