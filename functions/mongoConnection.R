@@ -9,5 +9,5 @@ connect_mongo <- function(collection_name, user = "root", pass = "password", hos
 
 # Overloaded method for RStudio use
 #connect_mongo <- function(collection_name) {
-#  return(mongo(collection = collection_name))
+#  return(mongo(collection = collection_name, db = "aml-bet"))
 #}

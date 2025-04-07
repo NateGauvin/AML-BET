@@ -34,6 +34,8 @@ all_datasets <- Sys.glob('data/*.rds')
 all_datasets <- sub('data/', '', all_datasets)
 all_datasets <- sub('.rds', '', all_datasets)
 
+if (is.null(all_datasets)) {stop("No datasets found to process/upload.")}
+
 if (args$datasets != "all") {
   datasets <- strsplit(args$datasets, ',')
   if (any(is.na(match(datasets[[1]], all_datasets)))) {
