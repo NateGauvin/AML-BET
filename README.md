@@ -24,5 +24,5 @@ At the moment, AML-BET allows you to populate a MongoDB instance with the comple
 4. Download and install MongoDB Compass from https://www.mongodb.com/try/download/compass (optional, allows you to view datasets)
 5. Using RStudio or another text editor/IDE, navigate to functions/mongoConnection.R and add hashtags (#) to comment out the detailed connect_mongo() function.
 6. Remove the respective hashtags that comment out the simpler connect_mongo() function.
-7. Using the RStudio terminal or cmd, run the command "Rscript functions/commandLineParser --db yes" to populate your MongoDB instance with the expression and clinical data of all currently supported datasets.
+7. Using the RStudio terminal or cmd, run the command "Rscript functions/processUploadParser.R --db yes" to populate your MongoDB instance with the expression and clinical data of all currently supported datasets.
 8. Once populated, you can use the script functions/queryMongoGeneratePlots.R in RStudio to generate plots from the data.
