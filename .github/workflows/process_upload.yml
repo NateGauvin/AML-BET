@@ -3,7 +3,7 @@ name: process_upload
 on:
   push:
     paths:
-      - workflow_dispatch
+      - functions/processUploadFunctions.R
 
 jobs:
   test-process:
