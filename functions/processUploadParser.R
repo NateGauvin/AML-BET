@@ -17,6 +17,8 @@ parser$add_argument("--clinical", default = "yes",
                     help = "add clinical data (yes/no)")
 parser$add_argument("--db", default = "no",
                     help = "upload data to database (yes/no)")
+parser$add_argument("--genes", default = "yes",
+                    help = "create collection for gene names (yes/no)")
 
 args <- parser$parse_args()
 
@@ -50,4 +52,8 @@ if (args$expression == "yes") {
 
 if (args$clinical == "yes") {
   print(lapply(all_datasets, upload_clinical_data, args$db))
+}
+
+if (args$genes == "yes") {
+  compile_genes()
 }

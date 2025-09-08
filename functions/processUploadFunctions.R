@@ -166,5 +166,33 @@ add_survival_data_GSE6891 <- function(dataset) {
   dataset$Y$death[dataset$Y$death == "alive"] <- 0
   dataset$Y$death[dataset$Y$death == "dead"] <- 1
   
+  dataset$Y$death <- as.numeric(dataset$Y$death)
+  
   return(dataset)
+}
+
+# Creates collection for gene names
+compile_genes <- function() {
+  connection <- connect_mongo(collection_name = "genes")
+  all_collections <- connection$run('{ "listCollections" : 1, "nameOnly" : true}')
+  all_collections <- all_collections$cursor$firstBatch[,1]
+  expr_check <- lapply("_expr", grepl, all_collections)
+  expr_check <- which(expr_check[[1]])
+  all_collections <- all_collections[expr_check]
+  all_collections <- gsub('.{5}$', '', all_collections)
+  
+  gene_list <- lapply(all_collections, function(collection_name) {
+    data_connection <- connect_mongo(paste0(collection_name, "_expr"))
+    genes_in_dataset <- data_connection$find(fields = '{"gene" : true, "_id" : false}')
+    return(as.vector(genes_in_dataset))
+  })
+  
+  gene_list <- unique(unlist(gene_list))
+  
+  for (x in gene_list) {
+    str <- paste0('{"gene" :"', x, '"}')
+    connection$insert(str)
+  }
+  
+  print("Genes compiled successfully.")
 }

@@ -3,7 +3,7 @@ riskTab <- tabPanel("Risk",
 )
 
 survivalTab <- tabPanel("Survival",
-  
+  uiOutput("survPlots")
 )
 
 forestTab <- tabPanel("Forest",
