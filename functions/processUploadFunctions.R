@@ -188,7 +188,6 @@ compile_genes <- function() {
   })
   
   gene_list <- unique(unlist(gene_list))
-  
   for (x in gene_list) {
     str <- paste0('{"gene" :"', x, '"}')
     connection$insert(str)

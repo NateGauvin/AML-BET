@@ -1,10 +1,8 @@
 library(shiny)
 library(bslib)
 
-setwd("C:/Users/nateg/Downloads/GitHub/AML-BET")
-
-source("shiny/ui-home.R")
-source("shiny/ui-about.R")
+source("./shiny/ui-home.R")
+source("./shiny/ui-about.R")
 
 navbarPage(
   

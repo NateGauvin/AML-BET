@@ -3,18 +3,16 @@
 # Make collection that contains all available genes
 # Add KM plotting capabilities (get HR using coxph, median is cutpoint)
 
-
-
 library(shiny)
 
-source("shiny/ui-resultsTab.R")
+source("./shiny/ui-resultsTab.R")
 
 function(input, output, session) {
   
   insertTab("mainPage", resultsTab, "Home", position = "after")
   hideTab("mainPage", "Results")
   
-  source("shiny/server-plots.R", local = TRUE)
+  source("./shiny/server-plots.R", local = TRUE)
   
   # Expand this to include genes in all datasets
   # Make a collection that contains all genes, pull from there
