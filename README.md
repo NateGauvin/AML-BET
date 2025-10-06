@@ -4,7 +4,7 @@
 
 *AML-BET* is an online tool that allows for the evaluation of biomarkers within the RNA-Seq profiles of Acute Myeloid Leukemia patients. You can perform visual differential expression analysis within risk prognoses, generate Kaplan Meier curves between high and low expression groups, and view forest plot summarizations of survival data across all datasets.
 
-The prototype and thesis proposal for AML-BET can be found in AML-BET_Prototype.
+The prototype and thesis proposal for *AML-BET* can be found in AML-BET_Prototype.
 
 # leukemia_lib (Contributed by Dr. Garrett Dancik)
 
