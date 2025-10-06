@@ -1,6 +1,9 @@
 library(shiny)
 library(bslib)
 
+# Add shinycssloaders:WithSpinner() to make loading more obvious
+# Add a H1 header to results page to show which gene is selected
+
 source("./shiny/ui-home.R")
 source("./shiny/ui-about.R")
 

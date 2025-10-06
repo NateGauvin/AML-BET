@@ -7,11 +7,12 @@ survivalTab <- tabPanel("Survival",
 )
 
 forestTab <- tabPanel("Forest",
-                   
+  uiOutput("forestPlots")
 )
 
 resultsTab <- tabPanel("Results",
   hr(),
+  uiOutput("geneHeader"),
   fluidRow(column(12,
     tabsetPanel(id = "resultsPage",
       riskTab,

@@ -1,9 +1,9 @@
 # TODO
 # Upload all datasets
-# Make collection that contains all available genes
-# Add KM plotting capabilities (get HR using coxph, median is cutpoint)
 
 library(shiny)
+
+selected_gene <<- "No Gene Selected"
 
 source("./shiny/ui-resultsTab.R")
 
@@ -14,15 +14,17 @@ function(input, output, session) {
   
   source("./shiny/server-plots.R", local = TRUE)
   
-  # Expand this to include genes in all datasets
-  # Make a collection that contains all genes, pull from there
   m <- connect_mongo("genes")
   genes <- m$find()$gene
   genes <- genes[order(genes)][15:length(genes)]
 
   geneButton <- observeEvent(input$geneSearchButton, {
-    print("Event Activated")
-    
+    print("Calculating...")
+    selected_gene <<- input$inputGene
+    output$geneHeader <- renderUI({
+      h1(selected_gene)
+    })
+    print(selected_gene)
     plotMultiple()
     showTab("mainPage", "Results", select = TRUE)
   })

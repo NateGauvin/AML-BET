@@ -2,6 +2,9 @@ source("functions/mongoConnection.R")
 library(ggplot2)
 library(survival)
 library(survminer)
+library(forestploter)
+library(grid)
+library(modi)
 
 query_mongo <- function(gene_name, variable, datasets = "all", method) {
   connection <- connect_mongo("temp_collection")
@@ -115,45 +118,61 @@ generate_boxplots <- function(data, gene_name, variable, method) {
   
   test_data <- test(formula = data$expr ~ data$risk,
                         var.equal = FALSE)
-    
+  
+  # Make sure p-values and other stats are trunc'd close to 0, but not exactly 0
+  # Make title format "dataset_name: AUC: xxx (p-value: x.xxx)
+  # For survival do "dataset_name: HR: xxx (p-value: x.xxx)"
+  
   if (method == "t-test") {test_label <- paste0("FC: ", trunc(2**(test_data$estimate[2] - test_data$estimate[1]) * 1000)/1000, ", ")}
+  
+  
   else if (method == "wilcox") {test_label <- paste0("AUC: ", trunc(test_data$statistic / 
                                                                       (length(data[data[,2] == "poor",][[1]]) *
                                                                          length(data[data[,2] == "favorable",][[1]]))
                                                                     * 1000)/1000,", ")}
   else {test_label <- ""}
   
-  if (method == "anova") {p_label <- paste0("p-value: ", trunc(summary(test_data)[[1]]$`Pr(>F)`[1] * 1000)/1000)}  
-  else {p_label <- paste0("p-value: ", trunc(test_data$p.value * 1000)/1000)}
-
-  # Make sure favorable = "lightblue", poor = "darkred"
+  if (method == "anova") {
+    if (summary(test_data)[[1]]$`Pr(>F)`[1] < 0.001) {p_label <- paste0("p-value: 0.001")}
+    else {p_label <- paste0("p-value: ", trunc(summary(test_data)[[1]]$`Pr(>F)`[1] * 1000)/1000)}
+    }  
+  
+  else {
+    if (test_data$p.value < 0.001) {p_label <- paste0("p-value: 0.001")}
+    else {p_label <- paste0("p-value: ", trunc(test_data$p.value * 1000)/1000)}
+    }
   
   ggplot(data, aes_string(x = variable, y = "expr", fill = variable)) + 
     geom_boxplot() + theme_classic() + 
-    ggtitle(paste0(dataset, ": ", gene_name, 
-                   "\n", test_label, p_label)) + 
+    ggtitle(paste0(dataset, ":\n", test_label, p_label)) + 
     labs(y = "Log Counts per Million", x = paste0(variable)) + 
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+    scale_fill_manual(values = c("poor" = "darkred", "intermediate" = "darkgrey", "favorable" = "lightblue"))
 }
 
 generate_km <- function(data, gene_name) {
   if (!is.data.frame(data[[2]])) {return(NA)}
   
   dataset <- data[[1]]
+  
   data <- na.omit(data[[2]])
   cutoff <- median(data[,1])
+  data$group <- ifelse(data[,1] < cutoff, "Low", 'High')
   
-  data$group <- ifelse(data[,1] <= cutoff, "Low", 'High')
+  if (length(levels(factor(data$group))) != 2) {return(NA)}
   
-  haz_ratio <- coxph(Surv(time = data[,2], event = data[,3]) ~ data$group, data = data)
-  hr <- trunc((1 / exp(haz_ratio$coefficients)) * 1000)/1000
-  fit <- survfit(Surv(time = data[,2], event = data[,3]) ~ data$group, data = data)
+  coxph_test <- coxph(Surv(time = data[,2], event = data[,3]) ~ group, data = data)
+  coxph_p <- trunc(summary(coxph_test)$coefficients[5] * 1000)/1000
+  if (coxph_p < 0.001) {coxph_p <- 0.001}
+  hr <- trunc((1 / exp(coxph_test$coefficients)) * 1000)/1000
+  if (hr < 0.001) {hr <- 0.001}
+  fit <- survfit(Surv(time = data[,2], event = data[,3]) ~ group, data = data)
   
-  ggsurvplot(fit, data = data, pval = TRUE,
-             title = paste0(dataset, ", ", "HR: ", hr),
-             legend.title = "Placeholder", xlab = "Time (Days?)",
-             legend.labs = c(paste0("High (> ", trunc(cutoff * 1000)/1000, ")"), 
-                             paste0("Low (<= ", trunc(cutoff * 1000)/1000,")")))
+  ggsurvplot(fit, data = data, pval = FALSE,
+             title = paste0(dataset, ":\n", "HR: ", hr, " (p-value: ", coxph_p, ")"),
+             legend.title = "", xlab = "Time",
+             legend.labs = c(paste0("High"), 
+                             paste0("Low")))
 }
 
 query_mongo_km <- function(gene_name, datasets = "all") {
@@ -180,4 +199,106 @@ query_mongo_km <- function(gene_name, datasets = "all") {
   
   #generate KM curves
   lapply(all_graph_data, generate_km, gene_name)
+}
+
+generate_forestplot_data <- function(data) {
+  if (!is.data.frame(data[[2]])) {return(NA)}
+  
+  dataset <- data[[1]]
+  data <- na.omit(data[[2]])
+  
+  cutoff <- median(data[,1])
+  data$group <- ifelse(data[,1] < cutoff, "Low", 'High')
+  
+  if (length(levels(factor(data$group))) != 2) {return(NA)}
+  
+  coxph_test <- coxph(Surv(time = data[,2], event = data[,3]) ~ group, data = data)
+  
+  CI <- confint(coxph_test)
+  
+  forestplot_data <- data.frame(
+    Dataset = dataset,
+    n = coxph_test$n,
+    HR = 1 / exp(coxph_test$coefficients),
+    CI_low = 1 / exp(CI[2]),
+    CI_high = 1 / exp(CI[1])
+  )
+  rownames(forestplot_data) <- NULL
+  return(forestplot_data)
+}
+
+query_mongo_forest <- function(gene_name, datasets = "all") {
+  connection <- connect_mongo("temp_collection")
+  all_collections <- connection$run('{ "listCollections" : 1, "nameOnly" : true}')
+  all_collections <- all_collections$cursor$firstBatch[,1]
+  expr_check <- lapply("_expr", grepl, all_collections)
+  expr_check <- which(expr_check[[1]])
+  all_collections <- all_collections[expr_check]
+  all_collections <- gsub('.{5}$', '', all_collections)
+  
+  #check datasets
+  if (datasets != "all") {
+    datasets <- strsplit(datasets, ",")
+    if (any(is.na(match(datasets[[1]], all_collections)))) {
+      stop('Invalid datasets entered')
+    }
+    all_collections <- datasets
+  }
+  
+  #obtain survival data from mongo
+  all_graph_data <- lapply(all_collections, return_data_km, gene_name)
+  all_graph_data <- lapply(1:length(all_graph_data), make_data_list, all_graph_data, all_collections)
+  
+  #generate km confidence intervals with hazard ratios and population
+  all_forestplot_data <- lapply(all_graph_data, generate_forestplot_data)
+  all_forestplot_data <- na.omit(do.call(rbind, all_forestplot_data))
+  
+  # Using forestploter package
+  
+  average <- weighted.mean(all_forestplot_data$HR, all_forestplot_data$n)
+  variance <- weighted.var(all_forestplot_data$HR,all_forestplot_data$n)
+  
+  all_forestplot_data[nrow(all_forestplot_data) + 1,] <-
+    c("Weighted Average", 
+      sum(all_forestplot_data$n), 
+      average,
+      average - qnorm(.975)*sqrt(variance),
+      average + qnorm(.975)*sqrt(variance))
+  
+  all_forestplot_data$` ` <- paste(rep(" ", 20), collapse = " ")
+  
+  all_forestplot_data$HR <- as.numeric(all_forestplot_data$HR)
+  all_forestplot_data$CI_low <- as.numeric(all_forestplot_data$CI_low)
+  all_forestplot_data$CI_high <- as.numeric(all_forestplot_data$CI_high)
+  
+  all_forestplot_data$`HR (95% CI)` <- 
+    sprintf("%.2f (%.2f to %.2f)", 
+            all_forestplot_data$HR, 
+            all_forestplot_data$CI_low, 
+            all_forestplot_data$CI_high)
+  
+  final_plot <-
+    forest(
+    data = all_forestplot_data[,c(1:3,6:7)],
+    est = all_forestplot_data$HR,
+    lower = all_forestplot_data$CI_low,
+    upper = all_forestplot_data$CI_high,
+    xlab = "Hazard Ratio",
+    ci_column = 4,
+    ref_line = 1,
+    xlim = c(0,3),
+    ticks_at = c(0.5, 1, 2, 3),
+    is_summary = c(rep(FALSE, nrow(all_forestplot_data) - 1), TRUE)
+  )
+  
+  final_plot <- edit_plot(final_plot,
+                          row = nrow(all_forestplot_data),
+                          gp = gpar(fontface = "bold"))
+  final_plot <- add_border(final_plot, part = "header",
+                           row = nrow(all_forestplot_data),
+                           where = "bottom")
+  final_plot <- add_border(final_plot, part = "header",
+                           row = 1,
+                           where = "bottom")
+  return(final_plot)
 }

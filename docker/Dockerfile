@@ -49,7 +49,10 @@ RUN add-apt-repository ppa:c2d4u.team/c2d4u4.0+
 #RUN apt install --no-install-recommends -y r-cran-argparse
 #RUN Rscript -e 'install.packages(c("ggplot2", "ggpubr" "argparse", "dplyr", "MASS", "tidyverse", "mongolite", "survival", "survminer", "bslib", "shiny", "shinyjs", "shinycssloaders"), repos="https://cloud.r-project.org")'
 RUN apt install --no-install-recommends -y r-cran-curl
-RUN install.r ggplot2 ggpubr argparse dplyr MASS tidyverse mongolite survival survminer bslib shiny shinyjs shinycssloaders
+RUN apt install --no-install-recommends -y r-cran-forestploter
+RUN apt install --no-install-recommends -y r-cran-grid
+RUN apt install --no-install-recommends -y r-cran-modi
+RUN install.r ggplot2 ggpubr argparse dplyr MASS mongolite survival survminer bslib shiny shinyjs shinycssloaders
 
 #RUN R -e "install.packages('GGally', repos = 'https://cloud.r-project.org/')"
 #RUN R -e "install.packages('shinyBS', repos = 'https://cloud.r-project.org/')"
